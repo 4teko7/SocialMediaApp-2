@@ -1,8 +1,9 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const express = require('express');
-const app = express();
+const utils = require('../utils');
 
+const app = express();
 admin.initializeApp();
 
 const firebaseConfig = {
@@ -24,6 +25,18 @@ firebase.initializeApp(firebaseConfig);
 const db = admin.firestore();
 
 
+let errors = {};
+
+
+const isEmpty = string =>{
+    if(string.trim() === "") return true;
+    else return false;
+}
+
+const isEmailValid = email =>{
+    if(email.match(utils.utils.emailValidationRegex)) return true;
+    else return false;
+}
 
 // https://baseurl.com/api/screams  = get
 app.get('/screams',(req,res)=>{
@@ -80,9 +93,26 @@ app.post('/signup',(req,res) =>{
 
     //Validate User
 
-    // db.collection(`users`).doc()
+    
+    errors = {};
+
+    if(isEmpty(newUser.email))
+        errors.email = "Must not be empty";
+    else if(!isEmailValid(newUser.email))
+        errors.email = "Must be a valid email address !";
+    
+    if(isEmpty(newUser.password)) errors.password = "Must not be empty";
+    else if(newUser.password.length < 2) errors.password = "Size must be larger than 2";
+    else if(newUser.password !== newUser.confirmPassword) errors.password = "Password and Confirm password do not match !";
+
+    if(isEmpty(newUser.handle)) errors.handle = "Must not be empty";
+
+
+    if(Object.keys(errors).length > 0) return res.status(400).json(errors);
+    
+    // If User is not exist , save it. or give an error
     let token,userId;
-    db.doc(`/users/${newUser.handle}`).get()
+    db.doc(`/users/${newUser.handle}`).get() // db.collection(`users`).doc()
         .then(doc =>{
             if(doc.exists){
                 return res.status(400).json({handle: 'this handle is already taken !'});
@@ -124,6 +154,39 @@ app.post('/signup',(req,res) =>{
 
 
 
+
+app.post('/login',(req,res)=>{
+    const user = {
+        email : req.body.email,
+        password : req.body.password
+    }
+
+    errors = {};
+
+    if(isEmpty(user.email)) errors.email = "Must not be empty";
+    if(isEmpty(user.password)) errors.password = "Must not be empty";
+    if(Object.keys(errors).length > 0) return res.status(400).json(errors);
+
+    firebase.auth().signInWithEmailAndPassword(user.email,user.password)
+        .then(data => {
+            return data.user.getIdToken();
+        })
+        .then(token =>{
+            res.json(token);
+        })
+        .catch(err=>{
+            console.error(err);
+            if(err.code === "auth/wrong-password"){
+                res.status(403).json("Email or Password is wrong !");
+            }else{
+                res.status(500).json({error:err.code});
+            }
+            
+        })
+
+
+
+});
 
 
 
