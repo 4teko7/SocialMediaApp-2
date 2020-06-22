@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
 const { getAllScreams,postOneScream } = require("./handlers/screams");
-const { signupRoute,loginRoute } = require("./handlers/users");
+const { signupMethod,loginMethod,uploadImageMethod } = require("./handlers/users");
 const {firebaseConfig} = require("./util/config");
 const { checkAuth } = require("./util/checkAuth");
 const { firebase } = require("./util/admin");
@@ -21,10 +21,11 @@ app.post('/screams', checkAuth, postOneScream);
 
 
 //User Routes
-app.post('/signup',signupRoute);
+app.post('/signup',signupMethod);
 
-app.post('/login',loginRoute);
+app.post('/login',loginMethod);
 
+app.post('/user/image', checkAuth ,uploadImageMethod);
 
 
 
