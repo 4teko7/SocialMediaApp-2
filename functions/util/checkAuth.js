@@ -24,7 +24,12 @@ exports.checkAuth = (req,res,next) =>{
         })
         .catch(err =>{
             console.error(err);
-            res.status(403).json({error:err.code});
+            if(err.code === "auth/id-token-expired") {
+                return res.status(403).json({error : "Please Login Before Posting Anything !"})
+            }else{
+                res.status(403).json({error:err.code});
+            }
+            
         });
 
 }

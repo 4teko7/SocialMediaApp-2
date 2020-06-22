@@ -1,9 +1,6 @@
 const { db, firebase } = require("../util/admin");
 
-const {isEmpty, isEmailValid,utils} = require("../util/validators");
-const {firebaseConfig} = require("../util/config");
-
-
+const {validataSignupData,validateLoginData} = require("../util/validators");
 
 signupRoute = (req,res) =>{
     const newUser = {
@@ -14,23 +11,10 @@ signupRoute = (req,res) =>{
     }
 
     //Validate User
-
+    var resultErrors = validataSignupData(newUser);
     
-    errors = {};
-
-    if(isEmpty(newUser.email))
-        errors.email = "Must not be empty";
-    else if(!isEmailValid(newUser.email))
-        errors.email = "Must be a valid email address !";
+    if(!resultErrors.valid) return res.status(400).json(resultErrors.errors);
     
-    if(isEmpty(newUser.password)) errors.password = "Must not be empty";
-    else if(newUser.password.length < 2) errors.password = "Size must be larger than 2";
-    else if(newUser.password !== newUser.confirmPassword) errors.password = "Password and Confirm password do not match !";
-
-    if(isEmpty(newUser.handle)) errors.handle = "Must not be empty";
-
-
-    if(Object.keys(errors).length > 0) return res.status(400).json(errors);
     
     // If User is not exist , save it. or give an error
     let token,userId;
@@ -81,11 +65,9 @@ loginRoute = (req,res)=>{
         password : req.body.password
     }
 
-    errors = {};
+    var resultErrors = validateLoginData(user);
 
-    if(isEmpty(user.email)) errors.email = "Must not be empty";
-    if(isEmpty(user.password)) errors.password = "Must not be empty";
-    if(Object.keys(errors).length > 0) return res.status(400).json(errors);
+    if(!resultErrors.valid)  return res.status(400).json(resultErrors.errors);
 
     firebase.auth().signInWithEmailAndPassword(user.email,user.password)
         .then(data => {
@@ -98,6 +80,8 @@ loginRoute = (req,res)=>{
             console.error(err);
             if(err.code === "auth/wrong-password"){
                 res.status(403).json("Email or Password is wrong !");
+            }else if(err.code === "auth/user-not-found"){
+                res.status(403).json("User Not Found !")
             }else{
                 res.status(500).json({error:err.code});
             }
