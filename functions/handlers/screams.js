@@ -43,6 +43,8 @@ exports.postOneScream = (req,res) =>{
 }
 
 
+
+//Get Specific Scream Details
 exports.getScream =(req,res) =>{
     let screamData = {};
     db.doc(`/screams/${req.params.screamId}`).get()
@@ -68,6 +70,39 @@ exports.getScream =(req,res) =>{
         .catch(err =>{
             console.error(err);
             return res.status(500).json({error : err.code});
+        })
+
+
+}
+
+
+
+// Comment on scream
+exports.commentOnScream = (req,res) =>{
+
+    if(req.body.body.trim() === "") return res.status(400).json({error:"Comment must not be empty"});
+
+    const newComment = {
+        body: req.body.body,
+        createdAt: new Date().toISOString(),
+        screamId: req.params.screamId,
+        userHandle: req.user.handle,
+        userImage: req.user.imageUrl
+    };
+
+    db.doc(`/screams/${req.params.screamId}`).get()
+        .then(doc =>{
+            if(!doc.exists){
+                return res.status(404).json({error : "Scream does not exist"});
+            }
+            return db.collection('comments').add(newComment);
+        })
+        .then(() =>{
+            res.json(newComment);
+        })
+        .catch(err =>{
+            console.error(err);
+            return res.status(500).json({message: err.code});
         })
 
 
