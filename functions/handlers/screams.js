@@ -194,7 +194,7 @@ exports.unlikeScream = (req,res) => {
                     return res.status(201).json(screamData);
                 })
             }else{
-                return res.status(400).json({error: "Scream already liked !"});
+                return res.status(400).json({error: "You did not like this !"});
             }
         })
         .catch(err =>{

@@ -3,7 +3,7 @@ const { getAllScreams,postOneScream,getScream, commentOnScream,likeScream,unlike
 const { signupMethod,loginMethod,uploadImageMethod, addUserDetails,getAuthenticatedUser} = require("./handlers/users");
 const {firebaseConfig} = require("./util/config");
 const { checkAuth } = require("./util/checkAuth");
-const { firebase } = require("./util/admin");
+const { firebase, db } = require("./util/admin");
 
 const express = require('express');
 
@@ -59,5 +59,74 @@ app.get("/user",checkAuth,getAuthenticatedUser)
 // https://baseurl.com/api/
 
 exports.api = functions.region('europe-west1').https.onRequest(app);  // If you want the machine region be europe-west1
+
+
+exports.createNotificationOnLike = functions.region('europe-west1').firestore.document('likes/{id}')
+    .onCreate(snapshot =>{
+        console.error("HERE IT IS @")
+        db.doc(`/screams/${snapshot.data().screamId}`).get()
+            .then(doc =>{
+                if(doc.exists){
+                    return db.doc(`/notifications/${snapshot.id}`).set({
+                        recipient: doc.data().userHandle,
+                        sender: snapshot.data().userHandle,
+                        read: false,
+                        screamId: doc.id,
+                        type: "like",
+                        createdAt: new Date().toISOString()
+                    })
+                }
+            })
+            .then(() =>{
+                return;
+            })
+            .catch(err =>{
+                console.error(err);
+                return res.status(500).json({error: err.code});
+            })
+    })
+
+
+
+exports.deleteNotificationOnUnLike = functions.region('europe-west1').firestore.document('likes/{id}')
+    .onDelete((snapshot,context) =>{
+        const likeDocument = db.doc(`/notifications/${snapshot.id}`)
+        likeDocument.get()
+            .then(doc =>{
+            return doc.delete()
+            })
+            .then(() =>{
+                return;
+            })
+            .catch(err =>{
+                console.error(err);
+                return res.status(500).json({error:err.code});
+            })
+    })
+
+
+exports.createNotificationOnComment = functions.region('europe-west1').firestore.document('comments/{id}')
+.onCreate(snapshot =>{
+    db.doc(`/screams/${snapshot.data().screamId}`).get()
+        .then(doc =>{
+            if(doc.exists){
+                return db.doc(`/notifications/${snapshot.id}`).set({
+                    recipient: doc.data().userHandle,
+                    sender: snapshot.data().userHandle,
+                    read: false,
+                    screamId: doc.id,
+                    type: "comment",
+                    createdAt: new Date().toISOString()
+                })
+            }
+        })
+        .then(() =>{
+            return;
+        })
+        .catch(err =>{
+            console.error(err);
+            return res.status(500).json({error: err.code});
+        })
+})
 
 // exports.api = functions.https.onRequest(app); 
