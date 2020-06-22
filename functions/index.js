@@ -1,5 +1,5 @@
 const functions = require('firebase-functions');
-const { getAllScreams,postOneScream } = require("./handlers/screams");
+const { getAllScreams,postOneScream,getScream } = require("./handlers/screams");
 const { signupMethod,loginMethod,uploadImageMethod, addUserDetails,getAuthenticatedUser} = require("./handlers/users");
 const {firebaseConfig} = require("./util/config");
 const { checkAuth } = require("./util/checkAuth");
@@ -16,7 +16,16 @@ let errors = {};
 
 app.get('/screams',getAllScreams);
 
+app.get('/screams/:screamId',getScream);
+
 app.post('/screams', checkAuth, postOneScream);
+
+// TODO: delete scream
+// TODO: like a scream
+// TODO: unlike a scream
+// TODO: comment on a scream
+
+
 
 
 
