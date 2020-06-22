@@ -1,5 +1,5 @@
 const functions = require('firebase-functions');
-const { getAllScreams,postOneScream,getScream, commentOnScream,likeScream,unlikeScream } = require("./handlers/screams");
+const { getAllScreams,postOneScream,getScream, commentOnScream,likeScream,unlikeScream,deleteScream } = require("./handlers/screams");
 const { signupMethod,loginMethod,uploadImageMethod, addUserDetails,getAuthenticatedUser} = require("./handlers/users");
 const {firebaseConfig} = require("./util/config");
 const { checkAuth } = require("./util/checkAuth");
@@ -25,6 +25,8 @@ app.get('/screams/:screamId/unlike',checkAuth,unlikeScream);
 app.post('/screams', checkAuth, postOneScream);
 
 app.post('/screams/:screamId/comment', checkAuth, commentOnScream);
+
+app.delete("/screams/:screamId",checkAuth,deleteScream);
 
 // TODO: delete scream
 // TODO: like a scream
