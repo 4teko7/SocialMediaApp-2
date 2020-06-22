@@ -51,4 +51,18 @@ const validateLoginData = data =>{
     }
 }
 
-module.exports = {isEmpty,isEmailValid,utils,validataSignupData,validateLoginData}
+
+const reduceUserDetails = (reqBody) =>{
+    let userDetails = {};
+    // if(!isEmpty(reqBody.bio)) 
+    userDetails.bio = reqBody.bio;
+    // if(!isEmpty(reqBody.website)) 
+    userDetails.website = reqBody.website.startsWith("http") ? reqBody.website.trim() : `http://${reqBody.website.trim()}`;
+    // if(!isEmpty(reqBody.location)) 
+    userDetails.location = reqBody.location;
+
+
+    return userDetails;
+}
+
+module.exports = {isEmpty,isEmailValid,validataSignupData,validateLoginData,reduceUserDetails}

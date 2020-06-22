@@ -1,6 +1,6 @@
 const { db, firebase,admin } = require("../util/admin");
 
-const {validataSignupData,validateLoginData} = require("../util/validators");
+const {validataSignupData,validateLoginData,reduceUserDetails} = require("../util/validators");
 
 const { firebaseConfig } = require('../util/config');
 
@@ -97,7 +97,7 @@ const loginMethod = (req,res)=>{
 
 }
 
-
+//Add User Profile Image
 const uploadImageMethod = (req,res)=>{
     const BusBoy = require('busboy');
     const path = require('path');
@@ -110,6 +110,9 @@ const uploadImageMethod = (req,res)=>{
     let imageToBeUploaded = {};
 
     busBoy.on('file',(fieldname,file,filename,encoding,mimetype)=>{
+        if(mimetype !== 'image/jpeg' && mimetype !== 'image/png'){
+            return res.status(400).json({message: "jpeg and png are allowed !!!"});
+        }
         console.log(fieldname);
         console.log(filename);
         console.log(mimetype);
@@ -147,4 +150,45 @@ const uploadImageMethod = (req,res)=>{
 
 }
 
-module.exports = {loginMethod,signupMethod,uploadImageMethod};
+
+//Add User Details
+const addUserDetails = (req,res) =>{
+    console.error("asdasd");
+    let userDetails = reduceUserDetails(req.body);
+    console.error(userDetails);
+    db.doc(`/users/${req.user.handle}`).update(userDetails)
+        .then(() =>{
+            return res.status(201).json({message: "Details updated successfully..."});
+        })
+        .catch(err =>{
+            console.error(err);
+            return res.status(500).json({message:"Something went wrong !"});
+        });
+}
+
+
+
+const getAuthenticatedUser = (req,res) =>{
+    let userData = {};
+
+    db.doc(`/users/${req.user.handle}`).get()
+        .then(doc =>{
+            if(doc.exists){
+                userData.credentials = doc.data();
+                return db.collection('likes').where('userHandle','==','req.user.handle').get();
+            }
+        })
+        .then(data =>{
+            userData.likes = [];
+            data.forEach(doc =>{
+                userData.likes.push(doc.data())
+            });
+            return res.json(userData);
+        })
+        .catch(err =>{
+            console.error(err);
+            return res.status(500).json({error: err.code});
+        })
+}
+
+module.exports = {loginMethod,signupMethod,uploadImageMethod,addUserDetails,getAuthenticatedUser};

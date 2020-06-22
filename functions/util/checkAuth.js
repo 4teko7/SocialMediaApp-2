@@ -26,6 +26,8 @@ exports.checkAuth = (req,res,next) =>{
             console.error(err);
             if(err.code === "auth/id-token-expired") {
                 return res.status(403).json({error : "Please Login Before Posting Anything !"})
+            }else if(err.code ==="Unauthorized"){
+                return res.status(403).json({message: "You Should Login !"});
             }else{
                 res.status(403).json({error:err.code});
             }
