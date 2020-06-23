@@ -6,7 +6,7 @@ import './App.css';
 import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
 
 //MaterialUi
-import MuiThemeProvider from '@material-ui/core/styles/MuiThemeProvider'
+import { ThemeProvider as MuiThemeProvider } from '@material-ui/core/styles';
 import createMuiTheme from '@material-ui/core/styles/createMuiTheme'
 
 
@@ -31,6 +31,9 @@ const theme = createMuiTheme({
       main: "#ff3d00",
       dark: "#b22a00",
       contrastText: "#fff"
+    },
+    typography:{
+      useNextVariants: true
     }
   }
 })
