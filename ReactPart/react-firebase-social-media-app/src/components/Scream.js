@@ -3,7 +3,7 @@ import withStyles from "@material-ui/core/styles/withStyles"
 
 
 //React Library
-import Link from 'react-router-dom/Link';
+import { Link } from 'react-router-dom';
 
 
 //MaterialUi
