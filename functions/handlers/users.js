@@ -167,7 +167,7 @@ const addUserDetails = (req,res) =>{
 }
 
 
-
+// Get authenticated user = User that is making request 
 const getAuthenticatedUser = (req,res) =>{
     let userData = {};
 
@@ -175,7 +175,7 @@ const getAuthenticatedUser = (req,res) =>{
         .then(doc =>{
             if(doc.exists){
                 userData.credentials = doc.data();
-                return db.collection('likes').where('userHandle','==','req.user.handle').get();
+                return db.collection('likes').where('userHandle','==',req.user.handle).get();
             }
         })
         .then(data =>{
@@ -183,6 +183,24 @@ const getAuthenticatedUser = (req,res) =>{
             data.forEach(doc =>{
                 userData.likes.push(doc.data())
             });
+            return db.collection('notifications').where('recipient','==',req.user.handle)
+                .orderBy('createdAt','desc').limit(10).get();
+            // return res.json(userData);
+        })
+        .then(data =>{
+            userData.notifications = [];
+            data.forEach(doc =>{
+                userData.notifications.push({
+                    recipient : doc.data().recipient,
+                    sender : doc.data().sender,
+                    read : doc.data().read,
+                    screamId : doc.data().screamId,
+                    type : doc.data().type,
+                    createdAt : doc.data().createdAt,
+                    notificationId : doc.id
+
+                })
+            })
             return res.json(userData);
         })
         .catch(err =>{
@@ -191,4 +209,49 @@ const getAuthenticatedUser = (req,res) =>{
         })
 }
 
-module.exports = {loginMethod,signupMethod,uploadImageMethod,addUserDetails,getAuthenticatedUser};
+
+// Get user details with user handle
+const getUserDetails = (req,res) =>{
+
+    let userData = {};
+
+    db.doc(`/users/${req.params.handle}`)
+        .get()
+        .then(doc =>{
+            if(doc.exists){
+                userData.user = doc.data();
+                return db.collection('screams').where("userHandle",'==',req.params.handle)
+                    .orderBy('createdBy','desc')
+                    .get();
+            }else{
+                return res.status(404).json({error:"User not found !!"})
+            }
+        })
+        .then(data => {
+            userData.screams = [];
+            data.forEach(doc =>{
+                userData.screams.push({
+                    body: doc.data().body,
+                    userHandle: doc.data().userHandle,
+                    createdAt: doc.data().createdAt,
+                    likeCount: doc.data().likeCount,
+                    commentCount: doc.data().commentCount,
+                    userImage: doc.data().userImage,
+                    screamId: doc.id
+
+                })
+            })
+            return res.json(userData);
+        })
+        .catch(err =>{
+            console.error(err);
+            return res.status(500).json({error:err.code});
+        })
+}
+
+
+const markNotificationsRead = (req,res) =>{
+
+}
+
+module.exports = {loginMethod,signupMethod,uploadImageMethod,addUserDetails,getAuthenticatedUser,getUserDetails,markNotificationsRead};

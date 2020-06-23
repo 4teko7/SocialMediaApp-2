@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
 const { getAllScreams,postOneScream,getScream, commentOnScream,likeScream,unlikeScream,deleteScream } = require("./handlers/screams");
-const { signupMethod,loginMethod,uploadImageMethod, addUserDetails,getAuthenticatedUser} = require("./handlers/users");
+const { signupMethod,loginMethod,uploadImageMethod, addUserDetails,getAuthenticatedUser,getUserDetails,markNotificationsRead} = require("./handlers/users");
 const {firebaseConfig} = require("./util/config");
 const { checkAuth } = require("./util/checkAuth");
 const { firebase, db } = require("./util/admin");
@@ -48,6 +48,9 @@ app.post('/user',checkAuth,addUserDetails);
 
 app.get("/user",checkAuth,getAuthenticatedUser)
 
+app.get('/user/:handle',getUserDetails);
+
+app.post('/notifications', checkAuth ,markNotificationsRead)
 
 
 
@@ -90,11 +93,8 @@ exports.createNotificationOnLike = functions.region('europe-west1').firestore.do
 
 exports.deleteNotificationOnUnLike = functions.region('europe-west1').firestore.document('likes/{id}')
     .onDelete((snapshot,context) =>{
-        const likeDocument = db.doc(`/notifications/${snapshot.id}`)
-        likeDocument.get()
-            .then(doc =>{
-            return doc.delete()
-            })
+        db.doc(`/notifications/${snapshot.id}`)
+            .delete()
             .then(() =>{
                 return;
             })
